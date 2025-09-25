@@ -8,11 +8,16 @@ module Htmltoword
         template_name += extension if template_name && !template_name.end_with?(extension)
         document = new(template_file(template_name))
         document.replace_files(content, extras)
-        docx_content = document.generate
+        document.generate
+        puts "\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-"
         if margins
-          apply_margins_to_docx(docx_content, margins)
+          puts 'hay márgenes'
+          puts "\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-"
+          apply_margins_to_docx(document, margins)
         else
-          docx_content
+          puts 'NO hay márgenes'
+          puts "\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-"
+          document
         end
       end
 
