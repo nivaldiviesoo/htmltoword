@@ -4,18 +4,12 @@ module Htmltoword
 
     class << self
       include TemplatesHelper
-      def create(content, template_name = nil, extras = false)
+      def create(content, template_name = nil, extras = false, margins = nil)
         template_name += extension if template_name && !template_name.end_with?(extension)
         document = new(template_file(template_name))
         document.replace_files(content, extras)
-        puts '-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
-        puts '-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
-        puts '-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
-        puts '              TEST DE REALIZAR FORK          '
-        puts '-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
-        puts '-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
-        puts '-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
         document.generate
+        apply_margins_to_docx(docx_content, margins) if margins
       end
 
       def create_and_save(content, file_path, template_name = nil, extras = false)
@@ -157,6 +151,50 @@ module Htmltoword
 
       #return the amended source to be saved into the zip
       doc.to_s
+    end
+
+    def apply_margins_to_docx(docx_content, margins_cm)
+      margin_twips = margins_cm.transform_values { |cm| (cm.to_f * 567).to_i }
+      input_file = Tempfile.new(['htmltoword_input', '.docx'])
+      begin
+        input_file.binmode
+        input_file.write(docx_content)
+        input_file.close
+
+        Zip::File.open(input_file.path) do |zip|
+          entry = zip.find_entry('word/document.xml')
+          xml_content = entry.get_input_stream.read
+          modified_xml = modify_document_xml_margins(xml_content, margin_twips)
+          zip.get_output_stream(entry.name) { |out| out.write(modified_xml) }
+        end
+
+        File.binread(input_file.path)
+      ensure
+        input_file.unlink
+      end
+    end
+
+    def modify_document_xml_margins(xml_content, margin_twips)
+      doc = Nokogiri::XML(xml_content)
+      namespaces = { 'w' => 'http://schemas.openxmlformats.org/wordprocessingml/2006/main' }
+
+      doc.xpath('//w:sectPr', namespaces).each do |sect_pr|
+        pg_mar = sect_pr.at_xpath('w:pgMar', namespaces)
+
+        unless pg_mar
+          pg_mar = Nokogiri::XML::Node.new('w:pgMar', doc)
+          pg_mar.namespace = sect_pr.namespace
+          sect_pr.add_child(pg_mar)
+        end
+
+        margin_sides = [:top, :right, :bottom, :left]
+        margin_sides.each { |side| pg_mar["w:#{side}"] = margin_twips[side].to_s }
+        pg_mar['w:header'] ||= '708'
+        pg_mar['w:footer'] ||= '708'
+        pg_mar['w:gutter'] ||= '0'
+      end
+
+      doc.to_xml(save_with: Nokogiri::XML::Node::SaveOptions::AS_XML)
     end
   end
 end
