@@ -9,16 +9,6 @@ module Htmltoword
         document = new(template_file(template_name))
         document.replace_files(content, extras)
         document.generate
-        puts "\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-"
-        if margins
-          puts 'hay márgenes'
-          puts "\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-"
-          apply_margins_to_docx(document, margins)
-        else
-          puts 'NO hay márgenes'
-          puts "\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-"
-          document
-        end
       end
 
       def create_and_save(content, file_path, template_name = nil, extras = false)
