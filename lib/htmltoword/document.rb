@@ -8,8 +8,11 @@ module Htmltoword
         template_name += extension if template_name && !template_name.end_with?(extension)
         document = new(template_file(template_name))
         document.replace_files(content, extras)
-        document.generate
-        apply_margins_to_docx(docx_content, margins) if margins
+        docx_content = document.generate
+        if margins
+          apply_margins_to_docx(docx_content, margins)
+        else
+          docx_content
       end
 
       def create_and_save(content, file_path, template_name = nil, extras = false)
