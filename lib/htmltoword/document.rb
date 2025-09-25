@@ -13,6 +13,7 @@ module Htmltoword
           apply_margins_to_docx(docx_content, margins)
         else
           docx_content
+        end
       end
 
       def create_and_save(content, file_path, template_name = nil, extras = false)
