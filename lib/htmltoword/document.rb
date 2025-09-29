@@ -9,7 +9,7 @@ module Htmltoword
         document = new(template_file(template_name))
         document.replace_files(content, extras)
         docx_content = document.generate
-        puts 'HOLAAAA MUNDO \n * \n * \n * \n * \n * \n * \n * \n * \n * \n\n'
+        puts 'TEST 29 DE SEPTIEMBRE 09:53'
         if margins
           puts 'HAY MÁRGENES'
           apply_margins_to_docx(docx_content, margins)
